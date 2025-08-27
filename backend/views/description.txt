@@ -1,0 +1,6 @@
+Optional folder for rendering dynamic responses, such as HTML 
+templates if your backend serves web pages. Uses engines like 
+EJS to inject data into templates for user-facing content. In 
+API-focused backends like yours, it might be minimal or unused, 
+focusing on JSON responses instead. Helps in cases where
+the backend needs to generate views for admin dashboards or emails.

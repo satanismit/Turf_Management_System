@@ -1,0 +1,6 @@
+Handles the core logic for processing user requests in  
+Turf Management System backend. Acts as a bridge between routes and models, e
+xecuting business rules like validating login credentials or managing 
+turf bookings. Contains functions that interact with the database via models 
+and prepare responses for the frontend. Ensures separation of concerns in 
+the MVC pattern for better code organization.

@@ -1,0 +1,7 @@
+Defines the structure and rules for data in your application, 
+such as user details or turf information. 
+Uses libraries like Mongoose to create schemas 
+that map to database collections or tables. 
+Handles data validation, relationships, and queries, 
+ensuring consistency when storing or retrieving information. 
+Central to the MVC pattern, as controllers rely on models for database operations.

@@ -1,0 +1,7 @@
+Stores configuration settings for the application, 
+including database connection strings and environment variables. 
+Manages app-wide settings like port numbers, API keys, 
+or third-party service integrations. 
+Keeps sensitive data separate from code for security and ease of deployment. 
+Essential for setting up environments (e.g., development vs. production) in 
+backend.

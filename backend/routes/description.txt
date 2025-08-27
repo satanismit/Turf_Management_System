@@ -1,0 +1,8 @@
+Maps API endpoints to specific controller functions, 
+defining how the server responds to requests 
+like /api/login or /api/book. 
+Organizes endpoints by feature 
+(e.g., authRoutes.js for authentication). Uses Express.js 
+routing to direct incoming requests to the appropriate 
+handlers. Simplifies API management and makes the backend
+scalable for your 12-15 APIs.

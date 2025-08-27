@@ -1,0 +1,6 @@
+Contains custom functions that run during request processing, 
+such as authentication checks or logging. Intercepts requests to add 
+features like CORS handling, error logging, or user session validation. 
+Placed between routes and controllers to modify requests or 
+responses globally. Enhances security and efficiency across 
+Turf Management System's APIs.
