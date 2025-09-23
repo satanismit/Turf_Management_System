@@ -1,0 +1,15 @@
+Sign up api 
+---> localhost:5000/api/auth/signup
+
+Login api 
+---> localhost:5000/api/auth/login
+
+Forgot Password api 
+---> localhost:5000/api/auth/forgot-password
+
+Reset Password api 
+---> localhost:5000/api/auth/reset-password
+
+Get All Users api 
+---> localhost:5000/api/auth/users
+
