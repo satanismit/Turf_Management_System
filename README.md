@@ -1,25 +1,94 @@
-# Turf Management System
+# Turf Management System - Frontend
 
-Turf Management System is a simple full-stack web application designed to manage turf bookings and administration. It provides an easy-to-use interface for users to register, log in, and book turfs, while also offering admin features for managing bookings and users.
+A modern React frontend for managing sports turf bookings with a clean, responsive design.
 
-The frontend is built using React and Vite, ensuring a fast and responsive user experience. The backend is powered by Node.js and Express.js, handling all business logic and API requests securely and efficiently.
+## Features
 
-Key features include user authentication (login and registration), turf booking, and an admin dashboard. The system exposes 12-15 RESTful APIs for various operations such as authentication, booking, and user management.
+- **Home Page**: Welcome page with hero section and features overview
+- **Authentication**: Login and Signup pages with form validation
+- **Turf Management**: Browse turfs, view details, and make bookings
+- **User Dashboard**: Profile management and booking history
+- **Admin Panel**: Comprehensive dashboard for managing turfs, bookings, and users
+- **Responsive Design**: Mobile-first design using TailwindCSS
 
-To get started, make sure you have Node.js and npm installed. First, set up the backend by navigating to the `backend` folder, installing dependencies, and starting the server. Then, set up the frontend by navigating to the `frontend` folder, installing dependencies, and running the development server.
+## Tech Stack
 
-Sample API endpoints include:
-- `POST /api/login` for user login
-- `POST /api/register` for user registration
-- `GET /api/turfs` to list all turfs
-- `POST /api/book` to book a turf
-and more for complete turf management functionality.
+- **React 19** with functional components and hooks
+- **React Router 6** for navigation
+- **TailwindCSS** for styling
+- **Vite** for development and building
 
-The project structure is straightforward:
+## Getting Started
+
+1. Install dependencies:
+```bash
+npm install
 ```
-Turf_Management_System/
-	backend/    # Express.js API server
-	frontend/   # React client (Vite)
+
+2. Start the development server:
+```bash
+npm run dev
 ```
 
-This project is released under the MIT License.
+3. Open [http://localhost:5173](http://localhost:5173) in your browser
+
+## Project Structure
+
+```
+src/
+├── components/          # Reusable UI components
+│   ├── Card.jsx        # Card wrapper component
+│   ├── Form.jsx        # Form components (Form, FormInput, FormButton)
+│   └── Navbar.jsx      # Navigation component
+├── pages/              # Page components
+│   ├── Home.jsx        # Landing page
+│   ├── Login.jsx       # Login page
+│   ├── Signup.jsx      # Registration page
+│   ├── Profile.jsx     # User profile page
+│   ├── TurfsList.jsx   # Turfs listing page
+│   ├── TurfDetails.jsx # Individual turf details and booking
+│   ├── MyBookings.jsx  # User's booking history
+│   └── AdminDashboard.jsx # Admin management panel
+├── data/
+│   └── staticData.js   # Mock data for development
+└── App.jsx            # Main app component with routing
+```
+
+## Available Routes
+
+- `/` - Home page
+- `/login` - User login
+- `/signup` - User registration
+- `/profile` - User profile management
+- `/turfs` - Browse available turfs
+- `/turf/:id` - Turf details and booking
+- `/my-bookings` - User's booking history
+- `/admin` - Admin dashboard
+
+## Features Overview
+
+### User Features
+- Browse and search turfs by name, location, or sport type
+- View detailed turf information including facilities and pricing
+- Make bookings with date and time slot selection
+- Manage user profile and view booking history
+- Responsive design for mobile and desktop
+
+### Admin Features
+- Dashboard with overview statistics
+- Manage turfs (view, add, edit, delete)
+- Manage bookings (approve, cancel, view details)
+- Manage users (view, edit, suspend)
+- Comprehensive data tables with search and filtering
+
+## Development Notes
+
+- All data is currently static (hardcoded) for demonstration purposes
+- Forms include basic validation and user feedback
+- Components are designed to be reusable and maintainable
+- TailwindCSS provides consistent styling and responsive design
+- Clean component structure with separation of concerns
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
