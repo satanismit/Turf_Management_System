@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { BACKEND_API } from '../config';
 import Card from '../components/Card';
 import { Form, FormInput, FormButton } from '../components/Form';
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
+    identifier: '',
     password: ''
   });
+  const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -18,12 +21,16 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate login logic
-    console.log('Login attempt:', formData);
-    // For demo purposes, redirect to home after login
-    navigate('/');
+    try {
+      const res = await axios.post(`${BACKEND_API}/auth/login`, formData);
+      localStorage.setItem('token', res.data.token);
+      window.dispatchEvent(new Event('authChange'));
+      navigate('/');
+    } catch (err) {
+      setMessage(err.response?.data?.error || 'Login failed');
+    }
   };
 
   return (
@@ -37,11 +44,11 @@ const Login = () => {
 
           <Form onSubmit={handleSubmit}>
             <FormInput
-              label="Email Address"
-              type="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={(e) => handleInputChange({ target: { name: 'email', value: e.target.value } })}
+              label="Email or Username"
+              type="text"
+              placeholder="Enter your email or username"
+              value={formData.identifier}
+              onChange={(e) => handleInputChange({ target: { name: 'identifier', value: e.target.value } })}
               required
             />
 
@@ -58,6 +65,12 @@ const Login = () => {
               Sign In
             </FormButton>
           </Form>
+
+          <div className="text-center mt-4">
+            <Link to="/forgot-password" className="text-blue-600 hover:text-blue-500">
+              Forgot Password?
+            </Link>
+          </div>
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">

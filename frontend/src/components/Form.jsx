@@ -6,13 +6,14 @@ const Form = ({ onSubmit, children, className = "" }) => {
   );
 };
 
-const FormInput = ({ label, type = "text", placeholder, value, onChange, required = false }) => {
+const FormInput = ({ label, type = "text", placeholder, value, onChange, required = false, name }) => {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
         {label}
       </label>
       <input
+        name={name}
         type={type}
         placeholder={placeholder}
         value={value}

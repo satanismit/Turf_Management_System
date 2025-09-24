@@ -1,16 +1,21 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { BACKEND_API } from '../config';
 import Card from '../components/Card';
 import { Form, FormInput, FormButton } from '../components/Form';
 
+
 const Signup = () => {
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',
     email: '',
-    phone: '',
+    username: '',
     password: '',
-    confirmPassword: ''
+    confPassword: '',
+    phone: ''
   });
+  const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -21,16 +26,30 @@ const Signup = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+
+    // Validation
+    if (formData.password.length < 8) {
+      setMessage('Password must be at least 8 characters long.');
       return;
     }
-    // Simulate signup logic
-    console.log('Signup attempt:', formData);
-    // For demo purposes, redirect to login after signup
-    navigate('/login');
+    if (formData.password !== formData.confPassword) {
+      setMessage('Passwords do not match!');
+      return;
+    }
+    if (formData.phone && formData.phone.length !== 10) {
+      setMessage('Phone number must be exactly 10 digits.');
+      return;
+    }
+
+    try {
+      const res = await axios.post(`${BACKEND_API}/auth/signup`, formData);
+      setMessage(res.data.message);
+      navigate('/login');
+    } catch (err) {
+      setMessage(err.response?.data?.error || 'Signup failed');
+    }
   };
 
   return (
@@ -46,9 +65,9 @@ const Signup = () => {
             <FormInput
               label="Full Name"
               type="text"
-              name="name"
+              name="fullName"
               placeholder="Enter your full name"
-              value={formData.name}
+              value={formData.fullName}
               onChange={handleInputChange}
               required
             />
@@ -64,13 +83,22 @@ const Signup = () => {
             />
 
             <FormInput
-              label="Phone Number"
+              label="Username"
+              type="text"
+              name="username"
+              placeholder="Enter your username"
+              value={formData.username}
+              onChange={handleInputChange}
+              required
+            />
+
+            <FormInput
+              label="Phone Number (Optional)"
               type="tel"
               name="phone"
               placeholder="Enter your phone number"
               value={formData.phone}
               onChange={handleInputChange}
-              required
             />
 
             <FormInput
@@ -86,9 +114,9 @@ const Signup = () => {
             <FormInput
               label="Confirm Password"
               type="password"
-              name="confirmPassword"
+              name="confPassword"
               placeholder="Confirm your password"
-              value={formData.confirmPassword}
+              value={formData.confPassword}
               onChange={handleInputChange}
               required
             />
@@ -97,6 +125,8 @@ const Signup = () => {
               Create Account
             </FormButton>
           </Form>
+
+          {message && <p className="mt-4 text-center text-red-500">{message}</p>}
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">

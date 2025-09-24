@@ -1,13 +1,32 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const checkLogin = () => {
+      const token = localStorage.getItem('token');
+      setIsLoggedIn(!!token);
+    };
+
+    checkLogin();
+
+    window.addEventListener('storage', checkLogin);
+    window.addEventListener('authChange', checkLogin);
+
+    return () => {
+      window.removeEventListener('storage', checkLogin);
+      window.removeEventListener('authChange', checkLogin);
+    };
+  }, []);
+
   const handleLogout = () => {
+    localStorage.removeItem('token');
     setIsLoggedIn(false);
-    navigate('/');
+    window.dispatchEvent(new Event('authChange'));
+    navigate('/login');
   };
 
   return (
@@ -19,7 +38,7 @@ const Navbar = () => {
               TurfManager
             </Link>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             <Link to="/" className="hover:text-green-200 transition-colors">
               Home
