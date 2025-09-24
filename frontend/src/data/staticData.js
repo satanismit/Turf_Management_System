@@ -8,7 +8,7 @@ export const turfs = [
     sportType: "Football",
     price: 1500,
     facilities: ["Floodlights", "Changing Rooms", "Parking", "Cafeteria"],
-    image: "https://via.placeholder.com/400x250",
+    image: "https://5.imimg.com/data5/SELLER/Default/2023/10/350327019/NU/WB/TZ/38215148/7-a-side-football-turf.jpg",
     description: "Premium football turf with modern facilities and excellent maintenance."
   },
   {
@@ -18,7 +18,7 @@ export const turfs = [
     sportType: "Cricket",
     price: 2000,
     facilities: ["Pavilion", "Practice Nets", "Scoreboard", "Parking"],
-    image: "https://via.placeholder.com/400x250",
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFyzQPzYs8G21pMIdg77aK06kp-AZTQYJ6NA&s",
     description: "Professional cricket ground with international standard facilities."
   },
   {
@@ -28,7 +28,7 @@ export const turfs = [
     sportType: "Basketball",
     price: 800,
     facilities: ["Indoor Court", "Air Conditioning", "Sound System", "Lockers"],
-    image: "https://via.placeholder.com/400x250",
+    image: "https://img.freepik.com/premium-photo/outdoor-sports-field-with-artificial-turf-playing-tennis-basketball_182615-1225.jpg",
     description: "Indoor basketball court perfect for tournaments and practice sessions."
   },
   {
@@ -38,7 +38,7 @@ export const turfs = [
     sportType: "Tennis",
     price: 1200,
     facilities: ["Multiple Courts", "Coaching Available", "Equipment Rental", "Parking"],
-    image: "https://via.placeholder.com/400x250",
+    image: "https://5.imimg.com/data5/SELLER/Default/2023/4/303074400/HG/EF/HR/16569354/synthetic-artificial-grass-turf-tennis-court.jpg",
     description: "Professional tennis courts with coaching facilities available."
   }
 ];

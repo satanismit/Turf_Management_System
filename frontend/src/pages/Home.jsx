@@ -61,16 +61,10 @@ const Home = () => {
           <p className="text-xl text-gray-600 mb-8">
             Join thousands of sports enthusiasts who trust TurfManager
           </p>
-          <div className="space-x-4">
-            <Link
-              to="/signup"
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
-            >
-              Sign Up Now
-            </Link>
+          <div>
             <Link
               to="/turfs"
-              className="bg-white text-green-600 border-2 border-green-600 px-6 py-3 rounded-lg font-semibold hover:bg-green-50 transition-colors"
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
             >
               Browse Turfs
             </Link>
