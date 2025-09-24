@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { BACKEND_API } from '../config';
 import Card from '../components/Card';
@@ -7,21 +8,41 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [bookings, setBookings] = useState([]);
   const [users, setUsers] = useState([]);
+  const [adminUser, setAdminUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchAdminData();
+    checkAdminAccess();
   }, []);
+
+  const checkAdminAccess = () => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (!token || !userData) {
+      setMessage('Please login to access this page');
+      setLoading(false);
+      setTimeout(() => navigate('/login'), 2000);
+      return;
+    }
+
+    const user = JSON.parse(userData);
+    if (user.role !== 'admin') {
+      setMessage('Access denied. Admin privileges required.');
+      setLoading(false);
+      setTimeout(() => navigate('/'), 2000);
+      return;
+    }
+
+    setAdminUser(user);
+    fetchAdminData();
+  };
 
   const fetchAdminData = async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        setMessage('Please login as admin to access this page');
-        setLoading(false);
-        return;
-      }
 
       // Fetch bookings and users
       const [bookingsResponse, usersResponse] = await Promise.all([
@@ -33,12 +54,15 @@ const AdminDashboard = () => {
         })
       ]);
 
-      setBookings(bookingsResponse.data.bookings);
-      setUsers(usersResponse.data.users);
+      setBookings(bookingsResponse.data.bookings || []);
+      setUsers(usersResponse.data.users || []);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching admin data:', error);
       setMessage(error.response?.data?.error || 'Failed to load admin data');
+      // Ensure arrays are set even on error
+      setBookings([]);
+      setUsers([]);
       setLoading(false);
     }
   };
@@ -59,13 +83,13 @@ const AdminDashboard = () => {
     }
   };
 
-  // Dashboard stats
+  // Dashboard stats - with safe fallbacks for undefined arrays
   const stats = {
-    totalUsers: users.length,
-    totalBookings: bookings.length,
-    pendingBookings: bookings.filter(b => b.status === 'pending').length,
-    totalRevenue: bookings.filter(b => b.status === 'confirmed' || b.status === 'completed')
-                           .reduce((sum, booking) => sum + booking.totalAmount, 0)
+    totalUsers: users?.length || 0,
+    totalBookings: bookings?.length || 0,
+    pendingBookings: bookings?.filter(b => b.status === 'pending')?.length || 0,
+    totalRevenue: bookings?.filter(b => b.status === 'confirmed' || b.status === 'completed')
+                           ?.reduce((sum, booking) => sum + (booking.totalAmount || 0), 0) || 0
   };
 
   const OverviewTab = () => (
@@ -93,7 +117,7 @@ const AdminDashboard = () => {
         <Card>
           <h3 className="text-lg font-semibold mb-4">Recent Bookings</h3>
           <div className="space-y-3">
-            {bookings.slice(0, 5).map(booking => (
+            {(bookings || []).slice(0, 5).map(booking => (
               <div key={booking._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-medium">{booking.turfName}</p>
@@ -112,7 +136,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
             ))}
-            {bookings.length === 0 && (
+            {(!bookings || bookings.length === 0) && (
               <p className="text-gray-500 text-center py-4">No bookings yet</p>
             )}
           </div>
@@ -121,7 +145,7 @@ const AdminDashboard = () => {
         <Card>
           <h3 className="text-lg font-semibold mb-4">Recent Users</h3>
           <div className="space-y-3">
-            {users.slice(0, 5).map(user => (
+            {(users || []).slice(0, 5).map(user => (
               <div key={user._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-medium">{user.fullName}</p>
@@ -130,12 +154,12 @@ const AdminDashboard = () => {
                 <div className="text-right">
                   <p className="text-sm text-gray-600 capitalize">{user.role}</p>
                   <p className="text-xs text-gray-500">
-                    {new Date(user.createdAt).toLocaleDateString()}
+                    {new Date(user.createdAt || Date.now()).toLocaleDateString()}
                   </p>
                 </div>
               </div>
             ))}
-            {users.length === 0 && (
+            {(!users || users.length === 0) && (
               <p className="text-gray-500 text-center py-4">No users yet</p>
             )}
           </div>
@@ -172,7 +196,7 @@ const AdminDashboard = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {bookings.map(booking => (
+            {(bookings || []).map(booking => (
               <tr key={booking._id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
@@ -231,7 +255,7 @@ const AdminDashboard = () => {
           </tbody>
         </table>
         
-        {bookings.length === 0 && (
+        {(!bookings || bookings.length === 0) && (
           <div className="text-center py-12">
             <p className="text-gray-500">No bookings found</p>
           </div>
@@ -265,7 +289,7 @@ const AdminDashboard = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {users.map(user => (
+            {(users || []).map(user => (
               <tr key={user._id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
@@ -294,7 +318,7 @@ const AdminDashboard = () => {
           </tbody>
         </table>
         
-        {users.length === 0 && (
+        {(!users || users.length === 0) && (
           <div className="text-center py-12">
             <p className="text-gray-500">No users found</p>
           </div>
@@ -314,7 +338,7 @@ const AdminDashboard = () => {
     );
   }
 
-  if (message && !bookings.length && !users.length) {
+  if (message && (!bookings?.length && !users?.length)) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 flex justify-center items-center">
         <div className="text-center">
@@ -327,7 +351,25 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          {adminUser && (
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  {adminUser.fullName.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">{adminUser.fullName}</p>
+                  <p className="text-sm text-gray-600">{adminUser.email}</p>
+                  <p className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded inline-block">
+                    {adminUser.role.toUpperCase()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
         
         {message && (
           <div className={`mb-6 p-3 rounded ${message.includes('success') ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'}`}>
@@ -357,7 +399,7 @@ const AdminDashboard = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Bookings ({bookings.length})
+                Bookings ({bookings?.length || 0})
               </button>
               <button
                 onClick={() => setActiveTab('users')}
@@ -367,7 +409,7 @@ const AdminDashboard = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Users ({users.length})
+                Users ({users?.length || 0})
               </button>
             </nav>
           </div>

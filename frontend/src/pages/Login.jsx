@@ -24,9 +24,20 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await axios.post(`${BACKEND_API}/auth/login`, formData);
+      
+      // Store both token and user data
       localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      
+      // Trigger auth state change
       window.dispatchEvent(new Event('authChange'));
-      navigate('/');
+      
+      // Navigate based on user role
+      if (res.data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setMessage(err.response?.data?.error || 'Login failed');
     }

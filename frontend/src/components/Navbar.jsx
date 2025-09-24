@@ -3,12 +3,16 @@ import { useState, useEffect } from 'react';
 
 const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkLogin = () => {
       const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
+      
       setIsLoggedIn(!!token);
+      setUser(userData ? JSON.parse(userData) : null);
     };
 
     checkLogin();
@@ -24,7 +28,9 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setIsLoggedIn(false);
+    setUser(null);
     window.dispatchEvent(new Event('authChange'));
     navigate('/login');
   };
@@ -53,6 +59,14 @@ const Navbar = () => {
                 className="hover:text-green-200 transition-colors"
               >
                 My Bookings
+              </Link>
+            )}
+            {isLoggedIn && user?.role === 'admin' && (
+              <Link
+                to="/admin"
+                className="hover:text-green-200 transition-colors font-semibold"
+              >
+                Admin Dashboard
               </Link>
             )}
             {isLoggedIn ? (

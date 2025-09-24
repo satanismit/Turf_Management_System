@@ -18,7 +18,7 @@ exports.signup = async (req, res) => {
             phone, 
             address: address || '',
             dateOfBirth: dateOfBirth || null,
-            gender: gender || ''
+            ...(gender && { gender }) // Only include gender if it's provided and not empty
         });
         await user.save();
 
