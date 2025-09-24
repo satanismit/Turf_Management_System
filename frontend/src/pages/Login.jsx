@@ -6,18 +6,11 @@ import Card from '../components/Card';
 import { Form, FormInput, FormButton } from '../components/Form';
 const Login = () => {
   const [formData, setFormData] = useState({
-<<<<<<< HEAD
     identifier: '',
     password: ''
   });
   const [message, setMessage] = useState('');
-=======
-    identifier: "",
-    password: "",
-  });
-  const [message, setMessage] = useState("");
-  
->>>>>>> 1614f2e473ffb885157ebff77640cf4d3c1891b9
+
   const navigate = useNavigate();
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -26,27 +19,16 @@ const Login = () => {
       [name]: value,
     }));
   };
-<<<<<<< HEAD
 
-=======
->>>>>>> 1614f2e473ffb885157ebff77640cf4d3c1891b9
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post(`${BACKEND_API}/auth/login`, formData);
-<<<<<<< HEAD
       localStorage.setItem('token', res.data.token);
       window.dispatchEvent(new Event('authChange'));
       navigate('/');
     } catch (err) {
       setMessage(err.response?.data?.error || 'Login failed');
-=======
-      localStorage.setItem("token", res.data.token);
-      window.dispatchEvent(new Event("authChange"));
-      navigate("/");
-    } catch (err) {
-      setMessage(err.response?.data?.error || "Login failed");
->>>>>>> 1614f2e473ffb885157ebff77640cf4d3c1891b9
     }
   };
   return (
@@ -73,15 +55,7 @@ px-4 sm:px-6 lg:px-8"
               type="text"
               placeholder="Enter your email or username"
               value={formData.identifier}
-<<<<<<< HEAD
               onChange={(e) => handleInputChange({ target: { name: 'identifier', value: e.target.value } })}
-=======
-              onChange={(e) =>
-                handleInputChange({
-                  target: { name: "identifier", value: e.target.value },
-                })
-              }
->>>>>>> 1614f2e473ffb885157ebff77640cf4d3c1891b9
               required
             />
             <FormInput
@@ -98,7 +72,6 @@ px-4 sm:px-6 lg:px-8"
             />
             <FormButton type="submit">Sign In</FormButton>
           </Form>
-<<<<<<< HEAD
 
           <div className="text-center mt-4">
             <Link to="/forgot-password" className="text-blue-600 hover:text-blue-500">
@@ -106,13 +79,6 @@ px-4 sm:px-6 lg:px-8"
             </Link>
           </div>
 
-=======
-          <div className="text-center mt-4">
-            <Link to="/forgot-password" className="text-blue-600 hover:text-blue500">
-              Forgot Password?
-            </Link>
-          </div>
->>>>>>> 1614f2e473ffb885157ebff77640cf4d3c1891b9
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Don't have an account?{' '}

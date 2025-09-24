@@ -3,11 +3,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-<<<<<<< HEAD
 import ForgotPassword from './pages/ForgotPassword';
-=======
-import ForgotPassword from './pages/ForgetPassword';
->>>>>>> 1614f2e473ffb885157ebff77640cf4d3c1891b9
 import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import TurfsList from './pages/TurfsList';
@@ -15,7 +11,7 @@ import TurfDetails from './pages/TurfDetails';
 import MyBookings from './pages/MyBookings';
 import AdminDashboard from './pages/AdminDashboard';
 function App() {
-<<<<<<< HEAD
+
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="min-h-screen bg-gray-50">
@@ -37,7 +33,6 @@ function App() {
       </div>
     </Router>
   );
-=======
 return (
 <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
 <div className="min-h-screen bg-gray-50">
@@ -59,6 +54,6 @@ return (
 </div>
 </Router>
 );
->>>>>>> 1614f2e473ffb885157ebff77640cf4d3c1891b9
 }
+
 export default App;

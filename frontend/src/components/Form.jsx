@@ -5,10 +5,8 @@ const Form = ({ onSubmit, children, className = "" }) => {
     </form>
   );
 };
-<<<<<<< HEAD
 
-const FormInput = ({ label, type = "text", placeholder, value, onChange, required = false, name }) => {
-=======
+
 const FormInput = ({
   label,
   type = "text",
@@ -18,7 +16,6 @@ const FormInput = ({
   required = false,
   name,
 }) => {
->>>>>>> 1614f2e473ffb885157ebff77640cf4d3c1891b9
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -62,4 +59,4 @@ const FormButton = ({
     </button>
   );
 };
-export { Form, FormInput, FormButton };
+export { Form, FormInput, FormButton }
