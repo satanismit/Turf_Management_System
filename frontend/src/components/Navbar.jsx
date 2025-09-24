@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
@@ -28,31 +27,6 @@ const Navbar = () => {
     setIsLoggedIn(false);
     window.dispatchEvent(new Event('authChange'));
     navigate('/login');
-=======
-import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-const Navbar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const navigate = useNavigate();
-  useEffect(() => {
-    const checkLogin = () => {
-      const token = localStorage.getItem("token");
-      setIsLoggedIn(!!token);
-    };
-    checkLogin();
-    window.addEventListener("storage", checkLogin);
-    window.addEventListener("authChange", checkLogin);
-    return () => {
-      window.removeEventListener("storage", checkLogin);
-      window.removeEventListener("authChange", checkLogin);
-    };
-  }, []);
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    window.dispatchEvent(new Event("authChange"));
-    navigate("/login");
->>>>>>> 1614f2e473ffb885157ebff77640cf4d3c1891b9
   };
   return (
     <nav className="bg-green-600 text-white shadow-lg">
@@ -63,10 +37,6 @@ const Navbar = () => {
               TurfManager
             </Link>
           </div>
-<<<<<<< HEAD
-
-=======
->>>>>>> 1614f2e473ffb885157ebff77640cf4d3c1891b9
           <div className="flex items-center space-x-4">
             <Link to="/" className="hover:text-green-200 transition-colors">
               Home
@@ -80,7 +50,7 @@ const Navbar = () => {
             {isLoggedIn && (
               <Link
                 to="/my-bookings"
-                className="hover:text-green-200 transitioncolors"
+                className="hover:text-green-200 transition-colors"
               >
                 My Bookings
               </Link>
@@ -89,7 +59,7 @@ const Navbar = () => {
               <div className="flex items-center space-x-4">
                 <Link
                   to="/profile"
-                  className="hover:text-green-200 transitioncolors"
+                  className="hover:text-green-200 transition-colors"
                 >
                   Profile
                 </Link>

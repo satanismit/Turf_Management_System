@@ -22,7 +22,6 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/turfs" element={<TurfsList />} />
           <Route path="/turf/:id" element={<TurfDetails />} />
@@ -33,27 +32,6 @@ function App() {
       </div>
     </Router>
   );
-return (
-<Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-<div className="min-h-screen bg-gray-50">
-<Navbar />
-<Routes>
-<Route path="/" element={<Home />} />
-<Route path="/login" element={<Login />} />
-<Route path="/signup" element={<Signup />} />
-<Route path="/forgot-password" element={<ForgotPassword />} />
-<Route path="/reset-password" element={<ResetPassword />} />
-<Route path="/reset-password" element={<ResetPassword />} />
-<Route path="/profile" element={<Profile />} />
-<Route path="/turfs" element={<TurfsList />} />
-<Route path="/turf/:id" element={<TurfDetails />} />
-<Route path="/turf/:id/book" element={<TurfDetails />} />
-<Route path="/my-bookings" element={<MyBookings />} />
-<Route path="/admin" element={<AdminDashboard />} />
-</Routes>
-</div>
-</Router>
-);
 }
 
 export default App;
