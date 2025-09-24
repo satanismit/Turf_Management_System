@@ -1,25 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { BACKEND_API } from '../config';
 import Card from '../components/Card';
-import { turfs, users, bookings } from '../data/staticData';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [bookings, setBookings] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    fetchAdminData();
+  }, []);
+
+  const fetchAdminData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setMessage('Please login as admin to access this page');
+        setLoading(false);
+        return;
+      }
+
+      // Fetch bookings and users
+      const [bookingsResponse, usersResponse] = await Promise.all([
+        axios.get(`${BACKEND_API}/bookings/all`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${BACKEND_API}/auth/users`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+
+      setBookings(bookingsResponse.data.bookings);
+      setUsers(usersResponse.data.users);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching admin data:', error);
+      setMessage(error.response?.data?.error || 'Failed to load admin data');
+      setLoading(false);
+    }
+  };
+
+  const updateBookingStatus = async (bookingId, status) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${BACKEND_API}/bookings/status/${bookingId}`, 
+        { status }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setMessage(`Booking ${status} successfully!`);
+      fetchAdminData(); // Refresh data
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      setMessage('Failed to update booking status');
+    }
+  };
 
   // Dashboard stats
   const stats = {
-    totalTurfs: turfs.length,
     totalUsers: users.length,
     totalBookings: bookings.length,
-    totalRevenue: bookings.reduce((sum, booking) => sum + booking.totalAmount, 0)
+    pendingBookings: bookings.filter(b => b.status === 'pending').length,
+    totalRevenue: bookings.filter(b => b.status === 'confirmed' || b.status === 'completed')
+                           .reduce((sum, booking) => sum + booking.totalAmount, 0)
   };
 
   const OverviewTab = () => (
     <div>
       <div className="grid md:grid-cols-4 gap-6 mb-8">
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-green-600 mb-2">{stats.totalTurfs}</div>
-          <div className="text-gray-600">Total Turfs</div>
-        </Card>
         <Card className="text-center">
           <div className="text-3xl font-bold text-blue-600 mb-2">{stats.totalUsers}</div>
           <div className="text-gray-600">Total Users</div>
@@ -29,7 +80,11 @@ const AdminDashboard = () => {
           <div className="text-gray-600">Total Bookings</div>
         </Card>
         <Card className="text-center">
-          <div className="text-3xl font-bold text-orange-600 mb-2">₹{stats.totalRevenue.toLocaleString()}</div>
+          <div className="text-3xl font-bold text-yellow-600 mb-2">{stats.pendingBookings}</div>
+          <div className="text-gray-600">Pending Requests</div>
+        </Card>
+        <Card className="text-center">
+          <div className="text-3xl font-bold text-green-600 mb-2">₹{stats.totalRevenue.toLocaleString()}</div>
           <div className="text-gray-600">Total Revenue</div>
         </Card>
       </div>
@@ -38,144 +93,149 @@ const AdminDashboard = () => {
         <Card>
           <h3 className="text-lg font-semibold mb-4">Recent Bookings</h3>
           <div className="space-y-3">
-            {bookings.slice(0, 5).map(booking => {
-              const turf = turfs.find(t => t.id === booking.turfId);
-              const user = users.find(u => u.id === booking.userId);
-              return (
-                <div key={booking.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">{turf?.name}</p>
-                    <p className="text-sm text-gray-600">{user?.name}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">₹{booking.totalAmount}</p>
-                    <p className="text-sm text-gray-600">{booking.date}</p>
-                  </div>
+            {bookings.slice(0, 5).map(booking => (
+              <div key={booking._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="font-medium">{booking.turfName}</p>
+                  <p className="text-sm text-gray-600">{booking.customerName}</p>
                 </div>
-              );
-            })}
+                <div className="text-right">
+                  <p className="font-semibold">₹{booking.totalAmount}</p>
+                  <p className={`text-xs px-2 py-1 rounded ${
+                    booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                    booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {bookings.length === 0 && (
+              <p className="text-gray-500 text-center py-4">No bookings yet</p>
+            )}
           </div>
         </Card>
 
         <Card>
-          <h3 className="text-lg font-semibold mb-4">Popular Turfs</h3>
+          <h3 className="text-lg font-semibold mb-4">Recent Users</h3>
           <div className="space-y-3">
-            {turfs.slice(0, 5).map(turf => (
-              <div key={turf.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            {users.slice(0, 5).map(user => (
+              <div key={user._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium">{turf.name}</p>
-                  <p className="text-sm text-gray-600">{turf.sportType}</p>
+                  <p className="font-medium">{user.fullName}</p>
+                  <p className="text-sm text-gray-600">{user.email}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium">₹{turf.price}/hr</p>
-                  <p className="text-sm text-gray-600">{turf.location}</p>
+                  <p className="text-sm text-gray-600 capitalize">{user.role}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(user.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
             ))}
+            {users.length === 0 && (
+              <p className="text-gray-500 text-center py-4">No users yet</p>
+            )}
           </div>
         </Card>
       </div>
     </div>
   );
 
-  const TurfsTab = () => (
+  const BookingsTab = () => (
     <Card>
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold">Manage Turfs</h3>
-        <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-          Add New Turf
-        </button>
+        <h3 className="text-lg font-semibold">Manage Bookings</h3>
       </div>
+      
       <div className="overflow-x-auto">
-        <table className="w-full table-auto">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-2">Name</th>
-              <th className="text-left py-2">Location</th>
-              <th className="text-left py-2">Sport</th>
-              <th className="text-left py-2">Price</th>
-              <th className="text-left py-2">Actions</th>
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Turf & Customer
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date & Time
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Amount
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody>
-            {turfs.map(turf => (
-              <tr key={turf.id} className="border-b">
-                <td className="py-3">{turf.name}</td>
-                <td className="py-3">{turf.location}</td>
-                <td className="py-3">{turf.sportType}</td>
-                <td className="py-3">₹{turf.price}</td>
-                <td className="py-3">
+          <tbody className="bg-white divide-y divide-gray-200">
+            {bookings.map(booking => (
+              <tr key={booking._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{booking.turfName}</div>
+                    <div className="text-sm text-gray-500">{booking.customerName}</div>
+                    <div className="text-xs text-gray-400">{booking.customerEmail}</div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{booking.date}</div>
+                  <div className="text-sm text-gray-500">{booking.timeSlot}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-green-600">₹{booking.totalAmount}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                    booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex gap-2">
-                    <button className="text-blue-600 hover:text-blue-800">Edit</button>
-                    <button className="text-red-600 hover:text-red-800">Delete</button>
+                    {booking.status === 'pending' && (
+                      <>
+                        <button
+                          onClick={() => updateBookingStatus(booking._id, 'confirmed')}
+                          className="text-green-600 hover:text-green-900 bg-green-100 px-3 py-1 rounded"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => updateBookingStatus(booking._id, 'cancelled')}
+                          className="text-red-600 hover:text-red-900 bg-red-100 px-3 py-1 rounded"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                    {booking.status === 'confirmed' && (
+                      <button
+                        onClick={() => updateBookingStatus(booking._id, 'completed')}
+                        className="text-blue-600 hover:text-blue-900 bg-blue-100 px-3 py-1 rounded"
+                      >
+                        Complete
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
-    </Card>
-  );
-
-  const BookingsTab = () => (
-    <Card>
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold">Manage Bookings</h3>
-        <div className="flex gap-2">
-          <select className="px-3 py-1 border border-gray-300 rounded">
-            <option>All Status</option>
-            <option>Confirmed</option>
-            <option>Pending</option>
-            <option>Cancelled</option>
-          </select>
-        </div>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full table-auto">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-2">Booking ID</th>
-              <th className="text-left py-2">User</th>
-              <th className="text-left py-2">Turf</th>
-              <th className="text-left py-2">Date</th>
-              <th className="text-left py-2">Amount</th>
-              <th className="text-left py-2">Status</th>
-              <th className="text-left py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {bookings.map(booking => {
-              const turf = turfs.find(t => t.id === booking.turfId);
-              const user = users.find(u => u.id === booking.userId);
-              return (
-                <tr key={booking.id} className="border-b">
-                  <td className="py-3">#{booking.id}</td>
-                  <td className="py-3">{user?.name}</td>
-                  <td className="py-3">{turf?.name}</td>
-                  <td className="py-3">{booking.date}</td>
-                  <td className="py-3">₹{booking.totalAmount}</td>
-                  <td className="py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                      booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {booking.status}
-                    </span>
-                  </td>
-                  <td className="py-3">
-                    <div className="flex gap-2">
-                      <button className="text-blue-600 hover:text-blue-800">View</button>
-                      <button className="text-green-600 hover:text-green-800">Approve</button>
-                      <button className="text-red-600 hover:text-red-800">Cancel</button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        
+        {bookings.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No bookings found</p>
+          </div>
+        )}
       </div>
     </Card>
   );
@@ -183,85 +243,132 @@ const AdminDashboard = () => {
   const UsersTab = () => (
     <Card>
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold">Manage Users</h3>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Search users..."
-            className="px-3 py-1 border border-gray-300 rounded"
-          />
-          <select className="px-3 py-1 border border-gray-300 rounded">
-            <option>All Roles</option>
-            <option>Admin</option>
-            <option>User</option>
-          </select>
-        </div>
+        <h3 className="text-lg font-semibold">Users Management</h3>
       </div>
+      
       <div className="overflow-x-auto">
-        <table className="w-full table-auto">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-2">Name</th>
-              <th className="text-left py-2">Email</th>
-              <th className="text-left py-2">Phone</th>
-              <th className="text-left py-2">Role</th>
-              <th className="text-left py-2">Actions</th>
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                User Details
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Contact
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Role
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Joined Date
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white divide-y divide-gray-200">
             {users.map(user => (
-              <tr key={user.id} className="border-b">
-                <td className="py-3">{user.name}</td>
-                <td className="py-3">{user.email}</td>
-                <td className="py-3">{user.phone}</td>
-                <td className="py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
+              <tr key={user._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{user.fullName}</div>
+                    <div className="text-sm text-gray-500">@{user.username}</div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{user.email}</div>
+                  <div className="text-sm text-gray-500">{user.phone || 'No phone'}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                    user.role === 'owner' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
                   }`}>
-                    {user.role}
+                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                   </span>
                 </td>
-                <td className="py-3">
-                  <div className="flex gap-2">
-                    <button className="text-blue-600 hover:text-blue-800">Edit</button>
-                    <button className="text-red-600 hover:text-red-800">Suspend</button>
-                  </div>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {new Date(user.createdAt).toLocaleDateString()}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        
+        {users.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No users found</p>
+          </div>
+        )}
       </div>
     </Card>
   );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex justify-center items-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (message && !bookings.length && !users.length) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex justify-center items-center">
+        <div className="text-center">
+          <p className="text-red-600 text-lg">{message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
         
+        {message && (
+          <div className={`mb-6 p-3 rounded ${message.includes('success') ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'}`}>
+            {message}
+          </div>
+        )}
+        
         {/* Tabs */}
         <div className="mb-8">
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
-              {[
-                { id: 'overview', label: 'Overview' },
-                { id: 'turfs', label: 'Turfs' },
-                { id: 'bookings', label: 'Bookings' },
-                { id: 'users', label: 'Users' }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab.id
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'overview'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab('bookings')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'bookings'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Bookings ({bookings.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'users'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Users ({users.length})
+              </button>
             </nav>
           </div>
         </div>
@@ -269,7 +376,6 @@ const AdminDashboard = () => {
         {/* Tab Content */}
         <div>
           {activeTab === 'overview' && <OverviewTab />}
-          {activeTab === 'turfs' && <TurfsTab />}
           {activeTab === 'bookings' && <BookingsTab />}
           {activeTab === 'users' && <UsersTab />}
         </div>

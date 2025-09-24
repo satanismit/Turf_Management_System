@@ -2,10 +2,14 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { BACKEND_API } from "../config";
+
 const ForgotPassword = () => {
+
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+
   const handleSubmit = async (e) => {
+
     e.preventDefault();
     try {
       const res = await axios.post(`${BACKEND_API}/auth/forgot-password`, {
@@ -15,8 +19,10 @@ const ForgotPassword = () => {
     } catch (err) {
       setMessage(err.response?.data?.error || "Error");
     }
+
   };
   return (
+    
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6">Forgot Password</h2>

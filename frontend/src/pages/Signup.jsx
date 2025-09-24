@@ -13,6 +13,9 @@ const Signup = () => {
     password: "",
     confPassword: "",
     phone: "",
+    address: "",
+    dateOfBirth: "",
+    gender: "",
   });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,6 +48,9 @@ const Signup = () => {
       password: formData.password.trim(),
       confPassword: formData.confPassword.trim(),
       phone: formData.phone.trim(),
+      address: formData.address.trim(),
+      dateOfBirth: formData.dateOfBirth,
+      gender: formData.gender,
     };
 
     // Validation
@@ -70,6 +76,9 @@ const Signup = () => {
         password: payload.password,
         confPassword: payload.confPassword,
         phone: payload.phone,
+        address: payload.address,
+        dateOfBirth: payload.dateOfBirth,
+        gender: payload.gender,
       });
       setMessage(res.data?.message || "Signup successful");
       navigate("/login");
@@ -130,6 +139,37 @@ const Signup = () => {
               value={formData.phone}
               onChange={handleInputChange}
             />
+            <FormInput
+              label="Address (Optional)"
+              type="text"
+              name="address"
+              placeholder="Enter your address"
+              value={formData.address}
+              onChange={handleInputChange}
+            />
+            <FormInput
+              label="Date of Birth (Optional)"
+              type="date"
+              name="dateOfBirth"
+              value={formData.dateOfBirth}
+              onChange={handleInputChange}
+            />
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Gender (Optional)
+              </label>
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
             <FormInput
               label="Password"
               type="password"

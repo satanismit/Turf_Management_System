@@ -1,17 +1,22 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { BACKEND_API } from '../config';
 import Card from '../components/Card';
 import { Form, FormInput, FormButton } from '../components/Form';
 import { turfs } from '../data/staticData';
 
 const TurfDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const turf = turfs.find(t => t.id === parseInt(id));
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
   const [bookingData, setBookingData] = useState({
     date: '',
     timeSlot: '',
-    duration: '2'
+    specialRequests: ''
   });
 
   if (!turf) {
@@ -38,11 +43,47 @@ const TurfDetails = () => {
     '8:00 PM - 10:00 PM'
   ];
 
-  const handleBookingSubmit = (e) => {
+  const handleBookingSubmit = async (e) => {
     e.preventDefault();
-    console.log('Booking submitted:', { turfId: turf.id, ...bookingData });
-    alert('Booking request submitted successfully!');
-    setShowBookingForm(false);
+    setMessage('');
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setMessage('Please login to make a booking');
+        setLoading(false);
+        return;
+      }
+
+      const bookingPayload = {
+        turfId: turf.id,
+        turfName: turf.name,
+        date: bookingData.date,
+        timeSlot: bookingData.timeSlot,
+        totalAmount: turf.price,
+        specialRequests: bookingData.specialRequests
+      };
+
+      const response = await axios.post(`${BACKEND_API}/bookings/create`, bookingPayload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setMessage('Booking request submitted successfully! You will be notified once confirmed.');
+      setShowBookingForm(false);
+      setBookingData({ date: '', timeSlot: '', specialRequests: '' });
+      
+      // Optional: Redirect to bookings page after a delay
+      setTimeout(() => {
+        navigate('/my-bookings');
+      }, 2000);
+
+    } catch (error) {
+      console.error('Booking error:', error);
+      setMessage(error.response?.data?.error || 'Failed to submit booking request');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -111,6 +152,12 @@ const TurfDetails = () => {
             <Card>
               <h2 className="text-2xl font-bold mb-4">Book This Turf</h2>
               
+              {message && (
+                <div className={`mb-4 p-3 rounded ${message.includes('success') ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'}`}>
+                  {message}
+                </div>
+              )}
+              
               {!showBookingForm ? (
                 <div className="text-center">
                   <p className="text-gray-600 mb-6">
@@ -131,11 +178,12 @@ const TurfDetails = () => {
                     name="date"
                     value={bookingData.date}
                     onChange={handleInputChange}
+                    min={new Date().toISOString().split('T')[0]}
                     required
                   />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Time Slot
                     </label>
                     <select
@@ -143,7 +191,7 @@ const TurfDetails = () => {
                       value={bookingData.timeSlot}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     >
                       <option value="">Select a time slot</option>
                       {timeSlots.map(slot => (
@@ -152,40 +200,39 @@ const TurfDetails = () => {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Duration (hours)
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Special Requests (Optional)
                     </label>
-                    <select
-                      name="duration"
-                      value={bookingData.duration}
+                    <textarea
+                      name="specialRequests"
+                      value={bookingData.specialRequests}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    >
-                      <option value="1">1 hour</option>
-                      <option value="2">2 hours</option>
-                      <option value="3">3 hours</option>
-                      <option value="4">4 hours</option>
-                    </select>
+                      rows="3"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="Any special requirements or notes..."
+                    />
                   </div>
 
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                     <div className="flex justify-between items-center">
                       <span className="font-semibold">Total Amount:</span>
-                      <span className="text-2xl font-bold text-green-600">
-                        ₹{turf.price * parseInt(bookingData.duration)}
-                      </span>
+                      <span className="text-xl font-bold text-green-600">₹{turf.price}</span>
                     </div>
+                    <p className="text-sm text-gray-600 mt-1">Price per hour</p>
                   </div>
 
                   <div className="flex gap-4">
-                    <FormButton type="submit">
-                      Confirm Booking
+                    <FormButton type="submit" disabled={loading}>
+                      {loading ? 'Submitting...' : 'Submit Booking Request'}
                     </FormButton>
                     <FormButton
                       type="button"
                       variant="secondary"
-                      onClick={() => setShowBookingForm(false)}
+                      onClick={() => {
+                        setShowBookingForm(false);
+                        setMessage('');
+                      }}
                     >
                       Cancel
                     </FormButton>

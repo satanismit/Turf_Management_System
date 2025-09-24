@@ -25,6 +25,7 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/turf_manage
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/bookings', require('./routes/bookingRoutes'));
 
 // Error Handling
 app.use((err, req, res, next) => {
