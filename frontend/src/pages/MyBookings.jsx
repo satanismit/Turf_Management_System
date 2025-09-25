@@ -71,8 +71,8 @@ const MyBookings = () => {
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-lg font-semibold">{booking.turfName}</h3>
-          <p className="text-gray-600">� {booking.customerEmail}</p>
-          <p className="text-gray-600">📱 {booking.customerPhone}</p>
+          <p className="text-gray-600">{booking.customerEmail}</p>
+          <p className="text-gray-600">{booking.customerPhone}</p>
           {booking.specialRequests && (
             <p className="text-gray-600">📝 {booking.specialRequests}</p>
           )}
