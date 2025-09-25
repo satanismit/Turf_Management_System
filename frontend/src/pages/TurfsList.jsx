@@ -56,8 +56,8 @@ const TurfsList = () => {
                 className="turf-image"
               />
               <h3 className="section-title">{turf.name}</h3>
-              <p className="text-muted space-bottom">📍 {turf.location}</p>
-              <p className="text-muted space-bottom">🏃 {turf.sportType}</p>
+              <p className="text-muted space-bottom"> {turf.location}</p>
+              <p className="text-muted space-bottom"> {turf.sportType}</p>
               <p className="price-text">₹{turf.price}/hour</p>
               
               <div className="flex gap-2">

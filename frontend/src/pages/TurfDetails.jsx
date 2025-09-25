@@ -113,11 +113,11 @@ const TurfDetails = () => {
               <h1 className="text-3xl font-bold mb-4">{turf.name}</h1>
               <div className="space-y-3 mb-6">
                 <p className="flex items-center text-gray-600">
-                  <span className="font-semibold mr-2">📍 Location:</span>
+                  <span className="font-semibold mr-2"> Location:</span>
                   {turf.location}
                 </p>
                 <p className="flex items-center text-gray-600">
-                  <span className="font-semibold mr-2">🏃 Sport:</span>
+                  <span className="font-semibold mr-2"> Sport:</span>
                   {turf.sportType}
                 </p>
                 <p className="flex items-center text-gray-600">
