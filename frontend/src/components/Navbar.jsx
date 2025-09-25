@@ -35,28 +35,28 @@ const Navbar = () => {
     navigate('/login');
   };
   return (
-    <nav className="bg-green-600 text-white shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+    <nav className="navbar">
+      <div className="navbar-container">
+        <div className="navbar-content">
           <div className="flex items-center">
-            <Link to="/" className="text-xl font-bold">
+            <Link to="/" className="navbar-brand">
               TurfManager
             </Link>
           </div>
-          <div className="flex items-center space-x-4">
-            <Link to="/" className="hover:text-green-200 transition-colors">
+          <div className="navbar-links">
+            <Link to="/" className="nav-link">
               Home
             </Link>
             <Link
               to="/turfs"
-              className="hover:text-green-200 transition-colors"
+              className="nav-link"
             >
               Turfs
             </Link>
             {isLoggedIn && (
               <Link
                 to="/my-bookings"
-                className="hover:text-green-200 transition-colors"
+                className="nav-link"
               >
                 My Bookings
               </Link>
@@ -64,7 +64,7 @@ const Navbar = () => {
             {isLoggedIn && user?.role === 'admin' && (
               <Link
                 to="/admin"
-                className="hover:text-green-200 transition-colors font-semibold"
+                className="nav-link font-semibold"
               >
                 Admin Dashboard
               </Link>
@@ -73,14 +73,13 @@ const Navbar = () => {
               <div className="flex items-center space-x-4">
                 <Link
                   to="/profile"
-                  className="hover:text-green-200 transition-colors"
+                  className="nav-link"
                 >
                   Profile
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="bg-green-700 hover:bg-green-800 px-3 py-1 rounded
-transition-colors"
+                  className="nav-button"
                 >
                   Logout
                 </button>
@@ -89,15 +88,13 @@ transition-colors"
               <div className="flex items-center space-x-2">
                 <Link
                   to="/login"
-                  className="bg-green-700 hover:bg-green-800 px-3 py-1 rounded
-transition-colors"
+                  className="nav-button"
                 >
                   Login
                 </Link>
                 <Link
                   to="/signup"
-                  className="bg-white text-green-600 hover:bg-gray-100 px-3 py-1
-rounded transition-colors"
+                  className="nav-button-white"
                 >
                   Sign Up
                 </Link>

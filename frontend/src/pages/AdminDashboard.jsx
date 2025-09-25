@@ -94,22 +94,22 @@ const AdminDashboard = () => {
 
   const OverviewTab = () => (
     <div>
-      <div className="grid md:grid-cols-4 gap-6 mb-8">
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-blue-600 mb-2">{stats.totalUsers}</div>
-          <div className="text-gray-600">Total Users</div>
+      <div className="stats-grid space-bottom-large">
+        <Card className="stat-card">
+          <div className="stat-number-blue">{stats.totalUsers}</div>
+          <div className="stat-label">Total Users</div>
         </Card>
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-purple-600 mb-2">{stats.totalBookings}</div>
-          <div className="text-gray-600">Total Bookings</div>
+        <Card className="stat-card">
+          <div className="stat-number-purple">{stats.totalBookings}</div>
+          <div className="stat-label">Total Bookings</div>
         </Card>
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-yellow-600 mb-2">{stats.pendingBookings}</div>
-          <div className="text-gray-600">Pending Requests</div>
+        <Card className="stat-card">
+          <div className="stat-number-yellow">{stats.pendingBookings}</div>
+          <div className="stat-label">Pending Requests</div>
         </Card>
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-green-600 mb-2">₹{stats.totalRevenue.toLocaleString()}</div>
-          <div className="text-gray-600">Total Revenue</div>
+        <Card className="stat-card">
+          <div className="stat-number-green">₹{stats.totalRevenue.toLocaleString()}</div>
+          <div className="stat-label">Total Revenue</div>
         </Card>
       </div>
 

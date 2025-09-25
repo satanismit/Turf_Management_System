@@ -31,15 +31,15 @@ const createAdminUser = async () => {
         });
 
         await adminUser.save();
-        console.log('✅ Admin user created successfully!');
-        console.log('📧 Email: admin@turfmanager.com');
-        console.log('👤 Username: admin');
-        console.log('🔐 Password: admin123');
+        console.log(' Admin user created successfully!');
+        console.log(' Email: admin@turfmanager.com');
+        console.log(' Username: admin');
+        console.log(' Password: admin123');
         console.log('');
         console.log('You can now login with these credentials!');
         
     } catch (error) {
-        console.error('❌ Error creating admin user:', error);
+        console.error(' Error creating admin user:', error);
     } finally {
         mongoose.connection.close();
     }

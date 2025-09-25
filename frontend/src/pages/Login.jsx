@@ -43,21 +43,18 @@ const Login = () => {
     }
   };
   return (
-    <div
-      className="min-h-screen bg-gray-50 flex items-center justify-center py-12
-px-4 sm:px-6 lg:px-8"
-    >
-      <div className="max-w-md w-full">
+    <div className="centered-page">
+      <div className="form-container">
         <Card>
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Sign In</h2>
-            <p className="mt-2 text-gray-600">
+          <div className="text-center space-bottom-large">
+            <h2 className="form-title">Sign In</h2>
+            <p className="subtitle">
               Access your TurfManager account
             </p>
           </div>
           <Form onSubmit={handleSubmit}>
             {message && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              <div className="space-bottom p-3 bg-red-100 border border-red-400 text-red-700 rounded">
                 {message}
               </div>
             )}
@@ -84,17 +81,16 @@ px-4 sm:px-6 lg:px-8"
             <FormButton type="submit">Sign In</FormButton>
           </Form>
 
-          <div className="text-center mt-4">
-            <Link to="/forgot-password" className="text-blue-600 hover:text-blue-500">
+          <div className="text-center space-top">
+            <Link to="/forgot-password" className="btn-link">
               Forgot Password?
             </Link>
           </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
+          <div className="space-top-large text-center">
+            <p className="text-muted">
               Don't have an account?{' '}
-              <Link to="/signup" className="text-green-600 hover:text-green-700
-font-medium">
+              <Link to="/signup" className="btn-link">
                 Sign up here
               </Link>
             </p>

@@ -95,12 +95,12 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
+    <div className="centered-page">
+      <div className="form-container">
         <Card>
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
-            <p className="mt-2 text-gray-600">Join TurfManager today</p>
+          <div className="text-center space-bottom-large">
+            <h2 className="form-title">Create Account</h2>
+            <p className="subtitle">Join TurfManager today</p>
           </div>
 
           <Form onSubmit={handleSubmit}>
@@ -193,12 +193,12 @@ const Signup = () => {
             </FormButton>
           </Form>
 
-          {message && <p className="mt-4 text-center text-red-500">{message}</p>}
+          {message && <p className="space-top text-center text-error">{message}</p>}
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
+          <div className="space-top-large text-center">
+            <p className="text-muted">
               Already have an account?{" "}
-              <Link to="/login" className="text-green-600 hover:text-green-700 font-medium">
+              <Link to="/login" className="btn-link">
                 Sign in here
               </Link>
             </p>

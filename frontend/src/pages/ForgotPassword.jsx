@@ -18,27 +18,27 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-                <h2 className="text-2xl font-bold mb-6">Forgot Password</h2>
+        <div className="centered-page">
+            <div className="card-container form-container">
+                <h2 className="form-title">Forgot Password</h2>
                 <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-gray-700">Email</label>
+                    <div className="space-bottom">
+                        <label className="label">Email</label>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 border rounded"
+                            className="form-input"
                             required
                         />
                     </div>
-                    <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded">
+                    <button type="submit" className="btn-full">
                         Send Reset Email
                     </button>
                 </form>
-                {message && <p className="mt-4 text-center">{message}</p>}
-                <div className="text-center mt-4">
-                    <Link to="/login" className="text-blue-600">Back to Login</Link>
+                {message && <p className="space-top text-center">{message}</p>}
+                <div className="text-center space-top">
+                    <Link to="/login" className="btn-link">Back to Login</Link>
                 </div>
             </div>
         </div>
