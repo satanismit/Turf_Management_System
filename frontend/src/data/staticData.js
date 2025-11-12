@@ -46,8 +46,8 @@ export const turfs = [
 export const users = [
   {
     id: 1,
-    name: "John Doe",
-    email: "john@example.com",
+    name: "Om  Choksi",
+    email: "Om @example.com",
     phone: "+91 9876543210",
     role: "user"
   },

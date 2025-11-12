@@ -1,0 +1,155 @@
+# Turf Management System API Endpoints
+
+## Authentication Routes (/api/auth)
+
+- **POST /api/auth/signup**
+  - Description: Register a new user
+  - Body: { name, email, password, phone }
+
+- **POST /api/auth/login**
+  - Description: Login user
+  - Body: { email, password }
+
+- **POST /api/auth/forgot-password**
+  - Description: Request password reset
+  - Body: { email }
+
+- **POST /api/auth/reset-password**
+  - Description: Reset password with token
+  - Body: { token, newPassword }
+
+- **GET /api/auth/profile**
+  - Description: Get current user profile
+  - Headers: Authorization: Bearer <token>
+
+- **PUT /api/auth/profile**
+  - Description: Update user profile
+  - Headers: Authorization: Bearer <token>
+  - Body: { name, email, phone }
+
+- **POST /api/auth/favorites/:turfId**
+  - Description: Add turf to user favorites
+  - Headers: Authorization: Bearer <token>
+
+- **DELETE /api/auth/favorites/:turfId**
+  - Description: Remove turf from user favorites
+  - Headers: Authorization: Bearer <token>
+
+- **GET /api/auth/favorites**
+  - Description: Get user's favorite turfs
+  - Headers: Authorization: Bearer <token>
+
+- **GET /api/auth/users**
+  - Description: Get all users (admin only)
+  - Headers: Authorization: Bearer <token>
+
+- **PUT /api/auth/users/:userId/status**
+  - Description: Block or unblock a user (admin only)
+  - Headers: Authorization: Bearer <token>
+  - Body: { status: "active" | "blocked" }
+
+- **DELETE /api/auth/users/:userId**
+  - Description: Delete a user (admin only)
+  - Headers: Authorization: Bearer <token>
+
+## Booking Routes (/api/bookings)
+
+- **POST /api/bookings/create**
+  - Description: Create a new booking
+  - Headers: Authorization: Bearer <token>
+  - Body: {
+    turfId,
+    date,
+    bookingType: "slot" | "custom",
+    timeSlot (for slot bookings),
+    startTime, endTime (for custom bookings, HH:MM format),
+    specialRequests
+  }
+
+- **GET /api/bookings/user**
+  - Description: Get bookings for current user
+  - Headers: Authorization: Bearer <token>
+
+- **GET /api/bookings/all**
+  - Description: Get all bookings (admin only)
+  - Headers: Authorization: Bearer <token>
+
+- **PUT /api/bookings/status/:bookingId**
+  - Description: Update booking status (admin only)
+  - Headers: Authorization: Bearer <token>
+  - Body: { status: "created" | "paid" | "confirmed" | "cancelled" | "completed" }
+
+- **PUT /api/bookings/cancel/:bookingId**
+  - Description: Cancel a booking
+  - Headers: Authorization: Bearer <token>
+
+## Payment Routes (/api/payments)
+
+- **POST /api/payments/process**
+  - Description: Process payment for a booking
+  - Headers: Authorization: Bearer <token>
+  - Body: {
+    bookingId,
+    paymentMethod: "credit_card" | "debit_card" | "upi",
+    cardDetails (for card payments) or upiId (for UPI)
+  }
+
+- **GET /api/payments/status/:bookingId**
+  - Description: Get payment status for a booking
+  - Headers: Authorization: Bearer <token>
+
+## Turf Routes (/api/turfs)
+
+- **GET /api/turfs**
+  - Description: Get all active turfs
+
+- **GET /api/turfs/:id**
+  - Description: Get turf by ID
+
+- **POST /api/turfs**
+  - Description: Create new turf (admin only)
+  - Headers: Authorization: Bearer <token>
+  - Content-Type: multipart/form-data
+  - Body: Form data with name, location, sportType, price, facilities, description, image (file)
+
+- **PUT /api/turfs/:id**
+  - Description: Update turf (admin only)
+  - Headers: Authorization: Bearer <token>
+  - Content-Type: multipart/form-data
+  - Body: Form data with name, location, sportType, price, facilities, description, image (optional file)
+
+- **DELETE /api/turfs/:id**
+  - Description: Delete turf (admin only)
+  - Headers: Authorization: Bearer <token>
+
+## Comment Routes (/api/comments)
+
+- **GET /api/comments/:turfId**
+  - Description: Get all visible comments for a specific turf (public)
+
+- **GET /api/comments/:turfId/all**
+  - Description: Get all comments for a turf including hidden ones (admin only)
+  - Headers: Authorization: Bearer <token>
+
+- **POST /api/comments**
+  - Description: Create a new comment
+  - Headers: Authorization: Bearer <token>
+  - Body: { turfId, comment, rating (optional, 1-5) }
+
+- **PUT /api/comments/:id**
+  - Description: Update a comment (comment owner only)
+  - Headers: Authorization: Bearer <token>
+  - Body: { comment, rating (optional) }
+
+- **DELETE /api/comments/:id**
+  - Description: Delete a comment (comment owner or admin only)
+  - Headers: Authorization: Bearer <token>
+
+- **PUT /api/comments/:id/moderate**
+  - Description: Hide or show a comment (admin only)
+  - Headers: Authorization: Bearer <token>
+  - Body: { isVisible: true/false }
+
+- **DELETE /api/comments/:id/admin**
+  - Description: Delete any comment (admin only)
+  - Headers: Authorization: Bearer <token>

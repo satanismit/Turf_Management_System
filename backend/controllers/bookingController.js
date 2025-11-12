@@ -1,43 +1,102 @@
 const Booking = require('../models/Booking');
 const User = require('../models/User');
+const Turf = require('../models/Turf');
 const jwt = require('jsonwebtoken');
+const { authenticateToken, requireAdminOrOwner } = require('../middleware/authMiddleware');
+
+// Helper function to calculate duration in hours
+const calculateDuration = (startTime, endTime) => {
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+    
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+    
+    const durationMinutes = endMinutes - startMinutes;
+    return Math.max(0, durationMinutes / 60); // Convert to hours
+};
+
+// Helper function to validate time range
+const isValidTimeRange = (startTime, endTime) => {
+    const duration = calculateDuration(startTime, endTime);
+    return duration > 0 && duration <= 12; // Max 12 hours
+};
 
 // Create a new booking request
 exports.createBooking = async (req, res) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        if (!token) {
-            return res.status(401).json({ error: 'Access denied. No token provided.' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        const user = await User.findById(decoded.id);
+        const user = await User.findById(req.userId);
         if (!user) {
             return res.status(401).json({ error: 'Invalid token.' });
         }
 
-        const { turfId, turfName, date, timeSlot, totalAmount, specialRequests } = req.body;
+        const { 
+            turfId, 
+            date, 
+            bookingType = 'slot', 
+            timeSlot, 
+            startTime, 
+            endTime, 
+            specialRequests 
+        } = req.body;
 
-        // Create new booking
-        const booking = new Booking({
+        // Get turf details for price calculation
+        const turf = await Turf.findById(turfId);
+        if (!turf) {
+            return res.status(404).json({ error: 'Turf not found.' });
+        }
+
+        let duration = 0;
+        let totalAmount = 0;
+        let bookingData = {
             userId: user._id,
             turfId,
-            turfName,
+            turfName: turf.name,
+            sportType: turf.sportType,
+            location: turf.location,
             date,
-            timeSlot,
-            totalAmount,
+            bookingType,
             customerName: user.fullName,
             customerEmail: user.email,
             customerPhone: user.phone || 'Not provided',
             specialRequests: specialRequests || '',
-            status: 'pending'
-        });
+            status: 'created'
+        };
 
+        if (bookingType === 'slot') {
+            // Slot booking - fixed duration (assuming 2 hours per slot)
+            duration = 2; // You can make this configurable
+            totalAmount = turf.price * duration;
+            bookingData.timeSlot = timeSlot;
+            bookingData.duration = duration;
+        } else if (bookingType === 'custom') {
+            // Custom time range booking
+            if (!startTime || !endTime) {
+                return res.status(400).json({ error: 'Start time and end time are required for custom bookings.' });
+            }
+
+            if (!isValidTimeRange(startTime, endTime)) {
+                return res.status(400).json({ error: 'Invalid time range. Maximum booking duration is 12 hours.' });
+            }
+
+            duration = calculateDuration(startTime, endTime);
+            totalAmount = Math.ceil(turf.price * duration); // Round up to nearest rupee
+            bookingData.startTime = startTime;
+            bookingData.endTime = endTime;
+            bookingData.duration = duration;
+        } else {
+            return res.status(400).json({ error: 'Invalid booking type.' });
+        }
+
+        bookingData.totalAmount = totalAmount;
+
+        // Create new booking
+        const booking = new Booking(bookingData);
         await booking.save();
 
-        res.status(201).json({ 
-            message: 'Booking request submitted successfully!', 
-            booking: booking 
+        res.status(201).json({
+            message: 'Booking request submitted successfully!',
+            booking: booking
         });
     } catch (err) {
         console.error('Booking creation error:', err);
@@ -48,13 +107,7 @@ exports.createBooking = async (req, res) => {
 // Get user's bookings
 exports.getUserBookings = async (req, res) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        if (!token) {
-            return res.status(401).json({ error: 'Access denied. No token provided.' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        const bookings = await Booking.find({ userId: decoded.id }).sort({ createdAt: -1 });
+        const bookings = await Booking.find({ userId: req.userId }).sort({ createdAt: -1 });
 
         res.json({ bookings });
     } catch (err) {
@@ -66,18 +119,6 @@ exports.getUserBookings = async (req, res) => {
 // Get all bookings (for admin/owner)
 exports.getAllBookings = async (req, res) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        if (!token) {
-            return res.status(401).json({ error: 'Access denied. No token provided.' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        const user = await User.findById(decoded.id);
-        
-        if (!user || (user.role !== 'admin' && user.role !== 'owner')) {
-            return res.status(403).json({ error: 'Access denied. Admin/Owner privileges required.' });
-        }
-
         const bookings = await Booking.find().populate('userId', 'fullName email phone').sort({ createdAt: -1 });
         res.json({ bookings });
     } catch (err) {
@@ -89,22 +130,10 @@ exports.getAllBookings = async (req, res) => {
 // Update booking status (for admin/owner)
 exports.updateBookingStatus = async (req, res) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        if (!token) {
-            return res.status(401).json({ error: 'Access denied. No token provided.' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        const user = await User.findById(decoded.id);
-        
-        if (!user || (user.role !== 'admin' && user.role !== 'owner')) {
-            return res.status(403).json({ error: 'Access denied. Admin/Owner privileges required.' });
-        }
-
         const { bookingId } = req.params;
         const { status } = req.body;
 
-        if (!['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
+        if (!['created', 'paid', 'confirmed', 'cancelled', 'completed'].includes(status)) {
             return res.status(400).json({ error: 'Invalid status value.' });
         }
 
@@ -118,9 +147,9 @@ exports.updateBookingStatus = async (req, res) => {
             return res.status(404).json({ error: 'Booking not found.' });
         }
 
-        res.json({ 
-            message: `Booking ${status} successfully!`, 
-            booking 
+        res.json({
+            message: `Booking ${status} successfully!`,
+            booking
         });
     } catch (err) {
         console.error('Update booking status error:', err);
@@ -131,15 +160,9 @@ exports.updateBookingStatus = async (req, res) => {
 // Cancel booking (user can cancel their own booking)
 exports.cancelBooking = async (req, res) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        if (!token) {
-            return res.status(401).json({ error: 'Access denied. No token provided.' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
         const { bookingId } = req.params;
 
-        const booking = await Booking.findOne({ _id: bookingId, userId: decoded.id });
+        const booking = await Booking.findOne({ _id: bookingId, userId: req.userId });
         if (!booking) {
             return res.status(404).json({ error: 'Booking not found or unauthorized.' });
         }
@@ -152,9 +175,9 @@ exports.cancelBooking = async (req, res) => {
         booking.updatedAt = Date.now();
         await booking.save();
 
-        res.json({ 
-            message: 'Booking cancelled successfully!', 
-            booking 
+        res.json({
+            message: 'Booking cancelled successfully!',
+            booking
         });
     } catch (err) {
         console.error('Cancel booking error:', err);

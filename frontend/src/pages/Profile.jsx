@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { BACKEND_API } from '../config';
 import Card from '../components/Card';
@@ -8,6 +9,8 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [favoriteTurfs, setFavoriteTurfs] = useState([]);
+  const [userBookings, setUserBookings] = useState([]);
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
@@ -23,6 +26,8 @@ const Profile = () => {
 
   useEffect(() => {
     fetchUserProfile();
+    fetchFavoriteTurfs();
+    fetchUserBookings();
   }, []);
 
   const fetchUserProfile = async () => {
@@ -56,6 +61,36 @@ const Profile = () => {
       console.error('Error fetching profile:', error);
       setMessage('Failed to load profile data');
       setLoading(false);
+    }
+  };
+
+  const fetchFavoriteTurfs = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await axios.get(`${BACKEND_API}/auth/favorites`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setFavoriteTurfs(response.data.favorites);
+    } catch (error) {
+      console.error('Error fetching favorite turfs:', error);
+    }
+  };
+
+  const fetchUserBookings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await axios.get(`${BACKEND_API}/bookings/user`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setUserBookings(response.data.bookings);
+    } catch (error) {
+      console.error('Error fetching user bookings:', error);
     }
   };
 
@@ -246,22 +281,56 @@ const Profile = () => {
               <h3 className="text-lg font-semibold mb-4">Account Statistics</h3>
               <div className="space-y-4">
                 <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">12</div>
+                  <div className="text-2xl font-bold text-green-600">{userBookings.length}</div>
                   <div className="text-sm text-gray-600">Total Bookings</div>
                 </div>
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">₹15,600</div>
+                  <div className="text-2xl font-bold text-blue-600">₹{userBookings.filter(b => b.status === 'confirmed' || b.status === 'completed').reduce((sum, booking) => sum + (booking.totalAmount || 0), 0).toLocaleString()}</div>
                   <div className="text-sm text-gray-600">Total Spent</div>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">8</div>
+                  <div className="text-2xl font-bold text-purple-600">{favoriteTurfs.length}</div>
                   <div className="text-sm text-gray-600">Favorite Turfs</div>
                 </div>
               </div>
             </Card>
 
             <Card className="mt-6">
-              <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+              <h3 className="text-lg font-semibold mb-4">Favorite Turfs</h3>
+              {favoriteTurfs.length === 0 ? (
+                <p className="text-gray-600 text-center py-4">No favorite turfs yet. Start exploring and add some!</p>
+              ) : (
+                <div className="space-y-3">
+                  {favoriteTurfs.map(turf => (
+                    <div key={turf._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <img
+                          src={turf.image}
+                          alt={turf.name}
+                          className="w-12 h-12 object-cover rounded-lg"
+                        />
+                        <div>
+                          <h4 className="font-medium text-gray-900">{turf.name}</h4>
+                          <p className="text-sm text-gray-600">{turf.location} • {turf.sportType}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-green-600">₹{turf.price}/hour</p>
+                        <Link
+                          to={`/turfs/${turf._id}`}
+                          className="text-sm text-blue-600 hover:text-blue-700"
+                        >
+                          View Details
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            <Card className="mt-6">
+              <h3 className="text-lg font-semibold mb-4">Quick Actions (Coming Soon Baby !!)</h3>
               <div className="space-y-3">
                 <button className="w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   Change Password

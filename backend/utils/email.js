@@ -48,4 +48,37 @@ Turf Management Team`
     await transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendWelcomeEmail, sendResetEmail };
+const sendPaymentReceipt = async (email, fullName, receiptPath, booking) => {
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Payment Receipt - Turf Booking Confirmation',
+        text: `Dear ${fullName},
+
+Thank you for your payment! Your turf booking has been confirmed.
+
+Booking Details:
+- Turf: ${booking.turfName}
+- Date: ${booking.date}
+- Time: ${booking.bookingType === 'slot' ? booking.timeSlot : `${booking.startTime} - ${booking.endTime}`}
+- Amount Paid: ₹${booking.totalAmount}
+
+Your payment receipt is attached to this email.
+
+Please keep this receipt for your records.
+
+Best regards,
+Turf Management Team`,
+        attachments: [
+            {
+                filename: `receipt_${booking._id.toString().slice(-8)}.pdf`,
+                path: receiptPath,
+                contentType: 'application/pdf'
+            }
+        ]
+    };
+
+    await transporter.sendMail(mailOptions);
+};
+
+module.exports = { sendWelcomeEmail, sendResetEmail, sendPaymentReceipt };

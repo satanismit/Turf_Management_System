@@ -28,23 +28,23 @@ const Home = () => {
           <h2 className="text-3xl font-bold text-center mb-12">Why Choose TurfManager?</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="text-center">
-              <div className="text-green-600 text-4xl mb-4">🏟️</div>
+              <div className="text-green-600 text-4xl mb-4"></div>
               <h3 className="text-xl font-semibold mb-2">Premium Facilities</h3>
               <p className="text-gray-600">
                 Access to top-quality sports turfs with modern amenities and equipment.
               </p>
             </Card>
-            
+
             <Card className="text-center">
-              <div className="text-green-600 text-4xl mb-4">📱</div>
+              <div className="text-green-600 text-4xl mb-4"></div>
               <h3 className="text-xl font-semibold mb-2">Easy Booking</h3>
               <p className="text-gray-600">
                 Simple and quick booking process with instant confirmation.
               </p>
             </Card>
-            
+
             <Card className="text-center">
-              <div className="text-green-600 text-4xl mb-4">💰</div>
+              <div className="text-green-600 text-4xl mb-4"></div>
               <h3 className="text-xl font-semibold mb-2">Best Prices</h3>
               <p className="text-gray-600">
                 Competitive pricing with transparent costs and no hidden fees.

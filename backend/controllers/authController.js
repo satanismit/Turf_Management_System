@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { sendWelcomeEmail, sendResetEmail } = require('../utils/email');
+const { authenticateToken, requireAdmin } = require('../middleware/authMiddleware');
 
 exports.signup = async (req, res) => {
     try {
@@ -10,12 +11,12 @@ exports.signup = async (req, res) => {
             return res.status(400).json({ error: 'Passwords do not match' });
         }
 
-        const user = new User({ 
-            fullName, 
-            email, 
-            username, 
-            password, 
-            phone, 
+        const user = new User({
+            fullName,
+            email,
+            username,
+            password,
+            phone,
             address: address || '',
             dateOfBirth: dateOfBirth || null,
             ...(gender && { gender }) // Only include gender if it's provided and not empty
@@ -52,12 +53,12 @@ exports.login = async (req, res) => {
         // Generate JWT token
         const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
 
-        res.json({ 
-            token, 
-            user: { 
-                id: user._id, 
-                fullName: user.fullName, 
-                email: user.email, 
+        res.json({
+            token,
+            user: {
+                id: user._id,
+                fullName: user.fullName,
+                email: user.email,
                 username: user.username,
                 phone: user.phone,
                 address: user.address,
@@ -66,7 +67,7 @@ exports.login = async (req, res) => {
                 gender: user.gender,
                 profileImage: user.profileImage,
                 emergencyContact: user.emergencyContact
-            } 
+            }
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -124,14 +125,8 @@ exports.resetPassword = async (req, res) => {
 // Get user profile
 exports.getUserProfile = async (req, res) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        if (!token) {
-            return res.status(401).json({ error: 'Access denied. No token provided.' });
-        }
+        const user = await User.findById(req.userId).select('-password -resetToken -resetTokenExpires');
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        const user = await User.findById(decoded.id).select('-password -resetToken -resetTokenExpires');
-        
         if (!user) {
             return res.status(404).json({ error: 'User not found.' });
         }
@@ -145,27 +140,24 @@ exports.getUserProfile = async (req, res) => {
 // Update user profile
 exports.updateUserProfile = async (req, res) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        if (!token) {
-            return res.status(401).json({ error: 'Access denied. No token provided.' });
+        const { fullName, phone, address, dateOfBirth, gender, emergencyContact } = req.body;
+        // Load current user to preserve fields not provided in the update
+        const currentUser = await User.findById(req.userId).select('-password -resetToken -resetTokenExpires');
+        if (!currentUser) {
+            return res.status(404).json({ error: 'User not found.' });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        const { fullName, phone, address, dateOfBirth, gender, emergencyContact } = req.body;
+        const updatedData = {
+            fullName: fullName || currentUser.fullName,
+            phone: phone || currentUser.phone,
+            address: address || currentUser.address,
+            dateOfBirth: dateOfBirth || currentUser.dateOfBirth,
+            gender: gender || currentUser.gender,
+            emergencyContact: emergencyContact || currentUser.emergencyContact,
+            updatedAt: Date.now()
+        };
 
-        const user = await User.findByIdAndUpdate(
-            decoded.id,
-            {
-                fullName: fullName || user.fullName,
-                phone: phone || user.phone,
-                address: address || user.address,
-                dateOfBirth: dateOfBirth || user.dateOfBirth,
-                gender: gender || user.gender,
-                emergencyContact: emergencyContact || user.emergencyContact,
-                updatedAt: Date.now()
-            },
-            { new: true }
-        ).select('-password -resetToken -resetTokenExpires');
+        const user = await User.findByIdAndUpdate(req.userId, updatedData, { new: true }).select('-password -resetToken -resetTokenExpires');
 
         if (!user) {
             return res.status(404).json({ error: 'User not found.' });
@@ -177,21 +169,9 @@ exports.updateUserProfile = async (req, res) => {
     }
 };
 
-// Get all users (for admin)
+// Get all users (admin)
 exports.getAllUsers = async (req, res) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        if (!token) {
-            return res.status(401).json({ error: 'Access denied. No token provided.' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        const user = await User.findById(decoded.id);
-        
-        if (!user || user.role !== 'admin') {
-            return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
-        }
-
         const users = await User.find().select('-password -resetToken -resetTokenExpires');
         res.json({ users });
     } catch (err) {
@@ -199,11 +179,117 @@ exports.getAllUsers = async (req, res) => {
     }
 };
 
-
-exports.getAllUsers = async (req, res) => {
+// Delete user (admin only)
+exports.deleteUser = async (req, res) => {
     try {
-        const users = await User.find().select('-password'); // Exclude password for security
-        res.json(users);
+        const { userId } = req.params;
+
+        // Prevent admin from deleting themselves
+        if (userId === req.user._id.toString()) {
+            return res.status(400).json({ error: 'Cannot delete your own account' });
+        }
+
+        const user = await User.findByIdAndDelete(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({ message: 'User deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Update user status (block/unblock) (admin only)
+exports.updateUserStatus = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { status } = req.body;
+
+        if (!['active', 'blocked'].includes(status)) {
+            return res.status(400).json({ error: 'Invalid status value' });
+        }
+
+        // Prevent admin from blocking themselves
+        if (userId === req.user._id.toString()) {
+            return res.status(400).json({ error: 'Cannot modify your own status' });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            userId,
+            {
+                status: status,
+                updatedAt: Date.now()
+            },
+            { new: true }
+        ).select('-password -resetToken -resetTokenExpires');
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({ message: `User ${status} successfully`, user });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Add turf to favorites
+exports.addToFavorites = async (req, res) => {
+    try {
+        const { turfId } = req.params;
+        const userId = req.userId;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Check if turf is already in favorites
+        if (user.favorites.includes(turfId)) {
+            return res.status(400).json({ error: 'Turf already in favorites' });
+        }
+
+        user.favorites.push(turfId);
+        await user.save();
+
+        res.json({ message: 'Turf added to favorites successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Remove turf from favorites
+exports.removeFromFavorites = async (req, res) => {
+    try {
+        const { turfId } = req.params;
+        const userId = req.userId;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        user.favorites = user.favorites.filter(id => id.toString() !== turfId);
+        await user.save();
+
+        res.json({ message: 'Turf removed from favorites successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Get user's favorite turfs
+exports.getFavoriteTurfs = async (req, res) => {
+    try {
+        const userId = req.userId;
+
+        const user = await User.findById(userId).populate('favorites');
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({ favorites: user.favorites });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

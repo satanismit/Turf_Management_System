@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { BACKEND_API } from '../config';
 import Card from '../components/Card';
 
 const MyBookings = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('upcoming');
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,8 +19,7 @@ const MyBookings = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        setMessage('Please login to view your bookings');
-        setLoading(false);
+        navigate('/login');
         return;
       }
 
@@ -41,7 +42,7 @@ const MyBookings = () => {
       await axios.put(`${BACKEND_API}/bookings/cancel/${bookingId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       setMessage('Booking cancelled successfully!');
       fetchUserBookings(); // Refresh the bookings list
     } catch (error) {
@@ -52,14 +53,16 @@ const MyBookings = () => {
 
   // Filter bookings based on status
   const upcomingBookings = bookings.filter(booking => booking.status === 'confirmed');
+  const paidBookings = bookings.filter(booking => booking.status === 'paid');
+  const createdBookings = bookings.filter(booking => booking.status === 'created');
   const pastBookings = bookings.filter(booking => booking.status === 'completed');
-  const pendingBookings = bookings.filter(booking => booking.status === 'pending');
   const cancelledBookings = bookings.filter(booking => booking.status === 'cancelled');
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'paid': return 'bg-blue-100 text-blue-800';
+      case 'created': return 'bg-orange-100 text-orange-800';
       case 'completed': return 'bg-gray-100 text-gray-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -71,17 +74,17 @@ const MyBookings = () => {
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-lg font-semibold">{booking.turfName}</h3>
-          <p className="text-gray-600">� {booking.customerEmail}</p>
-          <p className="text-gray-600">📱 {booking.customerPhone}</p>
+          <p className="text-gray-600"> {booking.customerEmail}</p>
+          <p className="text-gray-600"> {booking.customerPhone}</p>
           {booking.specialRequests && (
-            <p className="text-gray-600">📝 {booking.specialRequests}</p>
+            <p className="text-gray-600"> {booking.specialRequests}</p>
           )}
         </div>
         <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
           {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
         </span>
       </div>
-      
+
       <div className="grid md:grid-cols-3 gap-4 mb-4">
         <div>
           <p className="text-sm text-gray-500">Date</p>
@@ -101,11 +104,11 @@ const MyBookings = () => {
         <p>Booking ID: {booking._id}</p>
         <p>Created: {new Date(booking.createdAt).toLocaleDateString()}</p>
       </div>
-      
+
       <div className="flex gap-2">
         {booking.status === 'confirmed' && (
           <>
-            <button 
+            <button
               onClick={() => cancelBooking(booking._id)}
               className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
             >
@@ -113,12 +116,17 @@ const MyBookings = () => {
             </button>
           </>
         )}
-        {booking.status === 'pending' && (
-          <button 
-            onClick={() => cancelBooking(booking._id)}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+        {booking.status === 'paid' && (
+          <div className="text-sm text-blue-600 font-medium">
+            Waiting for admin approval
+          </div>
+        )}
+        {booking.status === 'created' && (
+          <button
+            onClick={() => window.location.href = `/turf/${booking.turfId}?booking=${booking._id}`}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Cancel Request
+            Pay Now
           </button>
         )}
         {booking.status === 'completed' && (
@@ -145,54 +153,59 @@ const MyBookings = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">My Bookings</h1>
-        
+
         {message && (
           <div className={`mb-6 p-3 rounded ${message.includes('success') ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'}`}>
             {message}
           </div>
         )}
-        
+
         {/* Tabs */}
         <div className="mb-8">
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
               <button
                 onClick={() => setActiveTab('upcoming')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'upcoming'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'upcoming'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 Confirmed ({upcomingBookings.length})
               </button>
               <button
-                onClick={() => setActiveTab('pending')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'pending'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                onClick={() => setActiveTab('paid')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'paid'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
-                Pending ({pendingBookings.length})
+                Paid ({paidBookings.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('created')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'created'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                Payment Pending ({createdBookings.length})
               </button>
               <button
                 onClick={() => setActiveTab('past')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'past'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'past'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 Past Bookings ({pastBookings.length})
               </button>
               <button
                 onClick={() => setActiveTab('cancelled')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'cancelled'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'cancelled'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 Cancelled ({cancelledBookings.length})
               </button>
@@ -211,7 +224,10 @@ const MyBookings = () => {
               ) : (
                 <Card className="text-center py-12">
                   <p className="text-gray-500 text-lg mb-4">No confirmed bookings</p>
-                  <button className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                  <button
+                    onClick={() => window.location.href = '/turfs'}
+                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
                     Book a Turf
                   </button>
                 </Card>
@@ -219,15 +235,35 @@ const MyBookings = () => {
             </div>
           )}
 
-          {activeTab === 'pending' && (
+          {activeTab === 'paid' && (
             <div>
-              {pendingBookings.length > 0 ? (
-                pendingBookings.map(booking => (
+              {paidBookings.length > 0 ? (
+                paidBookings.map(booking => (
                   <BookingCard key={booking._id} booking={booking} />
                 ))
               ) : (
                 <Card className="text-center py-12">
-                  <p className="text-gray-500 text-lg">No pending booking requests</p>
+                  <p className="text-gray-500 text-lg">No paid bookings waiting for approval</p>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'created' && (
+            <div>
+              {createdBookings.length > 0 ? (
+                createdBookings.map(booking => (
+                  <BookingCard key={booking._id} booking={booking} />
+                ))
+              ) : (
+                <Card className="text-center py-12">
+                  <p className="text-gray-500 text-lg mb-4">No bookings pending payment</p>
+                  <button
+                    onClick={() => window.location.href = '/turfs'}
+                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Book a Turf
+                  </button>
                 </Card>
               )}
             </div>
