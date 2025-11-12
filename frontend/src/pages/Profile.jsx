@@ -330,7 +330,7 @@ const Profile = () => {
             </Card>
 
             <Card className="mt-6">
-              <h3 className="text-lg font-semibold mb-4">Quick Actions (Coming Soon Baby !!)</h3>
+              <h3 className="text-lg font-semibold mb-4">Quick Actions (Coming Soon!!)</h3>
               <div className="space-y-3">
                 <button className="w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   Change Password

@@ -65,6 +65,8 @@ const TurfDetails = () => {
   };
 
   const checkIfFavorite = async () => {
+    if (!turf) return; // Prevent calling when turf is null
+    
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
@@ -247,6 +249,36 @@ const TurfDetails = () => {
     '6:00 PM - 8:00 PM',
     '8:00 PM - 10:00 PM'
   ];
+
+  // Function to get available time slots based on selected date
+  const getAvailableTimeSlots = () => {
+    const selectedDate = new Date(bookingData.date);
+    const today = new Date();
+    const isToday = selectedDate.toDateString() === today.toDateString();
+
+    if (!isToday) {
+      // Return all slots for future dates
+      return timeSlots;
+    }
+
+    // For today, filter out past slots
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    return timeSlots.filter(slot => {
+      // Extract start hour from slot string (e.g., "6:00 AM - 8:00 AM" -> 6)
+      const startTimeStr = slot.split(' - ')[0];
+      const [time, period] = startTimeStr.split(' ');
+      let [hour] = time.split(':').map(Number);
+      
+      // Convert to 24-hour format
+      if (period === 'PM' && hour !== 12) hour += 12;
+      if (period === 'AM' && hour === 12) hour = 0;
+
+      // Include slots that start at least 30 minutes from now
+      return hour > currentHour || (hour === currentHour && now.getMinutes() < 30);
+    });
+  };
 
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
