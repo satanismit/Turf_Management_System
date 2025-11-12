@@ -199,10 +199,10 @@ The API endpoints are documented in `docs/api-endpoints.txt`. The system provide
 ## Screenshots
 
 ![Application Screenshot 1](assets/01.png)
-![Application Screenshot 2](assets/02.png)
-![Application Screenshot 3](assets/03.png)
-![Application Screenshot 4](assets/04.png)
-![Application Screenshot 5](assets/05.png)
+![Application Screenshot 2](assets/03.png)
+![Application Screenshot 3](assets/013.png)
+![Application Screenshot 4](assets/07.png)
+![Application Screenshot 5](assets/018.png)
 
 ## Team
 
